@@ -13,25 +13,28 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system
 header{padding:16px max(4vw,14px) 6px}
 h1{font-size:26px;line-height:1.1;margin:0;font-weight:800}
 #status{margin:4px 0 0;color:var(--mute);font-size:14px}
-.wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;padding:10px max(4vw,14px) 28px;max-width:1240px;margin:auto}
+.wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;padding:10px max(4vw,14px) 28px;max-width:1240px;margin:auto;align-items:start}
 @media(max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}}
+@media(min-width:861px){.stagecol{position:sticky;top:10px}}
 .stage{--ar:1.333;position:relative;width:min(100%,calc(72vh * var(--ar)));aspect-ratio:var(--ar);margin:auto;background:#0d0d0f;border-radius:18px;overflow:hidden}
 .mirror{position:absolute;inset:0;transform:scaleX(-1)}
 .mirror video,.mirror canvas{position:absolute;inset:0;width:100%;height:100%}
 video{object-fit:fill}
 .ph{position:absolute;left:0;right:0;bottom:0;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;text-align:center;font-size:14px}
+.ph[hidden],[hidden]{display:none!important}
 .fit{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.62);color:#fff;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.35}
 .fit b{font-size:15px}
-.row{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
-button{font:inherit;font-weight:600;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
-button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.row{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}.row.l{justify-content:flex-start}
+button,.btn{font:inherit;font-weight:600;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+button.pri,.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,.btn:focus-within{outline:3px solid var(--acc);outline-offset:2px}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
-h2{font-size:15px;margin:14px 0 8px}h2:first-child{margin-top:0}
+h2{font-size:15px;margin:18px 0 8px}h2:first-child{margin-top:0}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
 .cards button{height:auto;padding:8px 6px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px}
 .cards button[aria-pressed=true],.seg button[aria-pressed=true]{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
-.cards svg{width:100%;height:30px}
+.cards svg,.cards img{width:100%;height:30px;object-fit:contain}
 .cards small{color:var(--mute);font-weight:400;white-space:nowrap}
 .seg{display:flex;flex-wrap:wrap;gap:6px}.seg button{min-height:38px;padding:0 12px;font-size:14px}
 label.r{display:grid;grid-template-columns:7.5em minmax(0,1fr) 4em;align-items:center;gap:8px;font-size:14px;margin:6px 0}
@@ -41,6 +44,13 @@ input[type=range]{width:100%;accent-color:var(--acc);height:28px}
 .sw button[aria-pressed=true]{outline:3px solid var(--acc);outline-offset:2px}
 .code{font-size:22px;font-weight:800;margin:10px 0 0;letter-spacing:.02em}
 .note{color:var(--mute);font-size:13px;margin:6px 0 0}
+.ov{display:block;width:100%;height:auto;border-radius:12px;margin-top:12px;background:#fff}
+.meas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.meas label,label.f{display:flex;flex-direction:column;font-size:13px;color:var(--mute);gap:4px}
+label.f{margin-top:8px}
+input[type=number],input[type=text]{font:inherit;font-size:16px;min-height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.ok{color:#0a8a4a;font-weight:600}.bad{color:#c8371e;font-weight:600}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-top:6px}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -49,7 +59,7 @@ input[type=range]{width:100%;accent-color:var(--acc);height:28px}
 <body>
 <header><h1>Probador de lentes</h1><p id="status">Cargando detector facial…</p></header>
 <main class="wrap">
-  <section>
+  <section class="stagecol">
     <div id="stage" class="stage">
       <div class="mirror"><video id="video" playsinline muted></video><canvas id="gl"></canvas></div>
       <div class="fit" id="fit" hidden></div>
@@ -59,21 +69,48 @@ input[type=range]{width:100%;accent-color:var(--acc);height:28px}
   </section>
   <aside class="panel">
     <h2>Catálogo</h2><div id="catalog" class="cards"></div>
-    <h2>Modelador</h2>
-    <div class="seg" id="shape"></div>
-    <label class="r">Ancho lente<input type="range" id="lens" min="44" max="62" step="1"><output id="o-lens"></output></label>
-    <label class="r">Alto lente<input type="range" id="height" min="28" max="56" step="1"><output id="o-height"></output></label>
-    <label class="r">Puente<input type="range" id="bridge" min="12" max="24" step="1"><output id="o-bridge"></output></label>
+
+    <div id="param">
+      <h2>Modelador</h2>
+      <div class="seg" id="shape"></div>
+      <label class="r">Ancho lente<input type="range" id="lens" min="44" max="62" step="1"><output id="o-lens"></output></label>
+      <label class="r">Alto lente<input type="range" id="height" min="28" max="56" step="1"><output id="o-height"></output></label>
+      <label class="r">Puente<input type="range" id="bridge" min="12" max="24" step="1"><output id="o-bridge"></output></label>
+      <h2>Color</h2>
+      <div class="sw" id="colors"></div>
+    </div>
+    <div id="photoNote" hidden>
+      <p class="note">Modelo creado desde foto: la forma, el color y la textura vienen de la imagen.</p>
+      <div class="row l"><button id="del">Quitar del catálogo</button></div>
+    </div>
     <label class="r">Patilla<input type="range" id="temple" min="130" max="150" step="5"><output id="o-temple"></output></label>
-    <h2>Material y color</h2>
-    <div class="seg" id="mat"></div>
-    <div class="sw" id="colors" style="margin-top:10px"></div>
+    <h2>Material</h2><div class="seg" id="mat"></div>
     <h2>Cristal</h2><div class="seg" id="tint"></div>
     <h2>Ajuste en el rostro</h2>
     <label class="r">Altura<input type="range" id="up" min="-8" max="8" step="0.5"><output id="o-up"></output></label>
     <label class="r">Profundidad<input type="range" id="depth" min="-6" max="10" step="0.5"><output id="o-depth"></output></label>
     <p class="code" id="code"></p>
-    <p class="note">Medida estándar: ancho de lente □ puente – patilla, en mm. La escala real se estima con el diámetro del iris (~11,7 mm).</p>
+
+    <h2>Agregar marco desde foto</h2>
+    <p class="note">Foto del marco de frente, con las patillas abiertas hacia atrás, sobre fondo blanco liso y buena luz. Funciona con lentes ópticos o de cristal claro.</p>
+    <div class="row l">
+      <label class="btn pri">Subir o tomar foto<input type="file" id="file" accept="image/*" hidden></label>
+      <button id="sample">Usar foto de ejemplo</button>
+    </div>
+    <div id="ed" hidden>
+      <canvas id="ov" class="ov"></canvas>
+      <div class="legend"><span><i style="background:#ff3b30"></i>Marco</span><span><i style="background:#0a84ff"></i>Lentes</span></div>
+      <p id="det" class="note"></p>
+      <label class="r">Sensibilidad<input type="range" id="thr" min="12" max="90" step="1" value="40"><output id="o-thr">40</output></label>
+      <div class="meas">
+        <label>Lente (mm)<input type="number" id="m-lens" value="52" inputmode="numeric"></label>
+        <label>Puente (mm)<input type="number" id="m-bridge" value="18" inputmode="numeric"></label>
+        <label>Patilla (mm)<input type="number" id="m-temple" value="145" inputmode="numeric"></label>
+      </div>
+      <label class="f">Nombre del modelo<input type="text" id="m-name" value="Mi marco"></label>
+      <div class="row l"><button class="pri" id="add">Agregar al catálogo</button><button id="cancel">Cancelar</button></div>
+    </div>
+    <p class="note">Medida estándar impresa en la patilla: ancho de lente □ puente – patilla, en mm. La escala en el rostro se estima con el diámetro del iris (~11,7 mm).</p>
   </aside>
 </main>
 <script type="module">
@@ -84,22 +121,23 @@ import { FaceLandmarker, FilesetResolver } from 'https://cdn.jsdelivr.net/npm/@m
 const $ = id => document.getElementById(id);
 const video = $('video'), canvas = $('gl'), stage = $('stage'), statusEl = $('status'), fitEl = $('fit');
 const say = t => statusEl.textContent = t;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 const CATALOG = [
-  {name:'Wayfarer', shape:'wayfarer', lens:52, height:40, bridge:18, temple:145, color:'#151515', mat:'acetato', tint:'clear'},
-  {name:'Redondo', shape:'redondo', lens:48, height:45, bridge:21, temple:145, color:'#7a4a2a', mat:'acetato', tint:'clear'},
-  {name:'Aviador', shape:'aviador', lens:58, height:50, bridge:14, temple:140, color:'#c9a24a', mat:'metal', tint:'verde'},
-  {name:'Ojo de gato', shape:'gato', lens:53, height:40, bridge:17, temple:140, color:'#a3142a', mat:'acetato', tint:'clear'},
-  {name:'Rectangular', shape:'rectangular', lens:55, height:36, bridge:17, temple:145, color:'#1d3d6e', mat:'acetato', tint:'azul'},
+  {id:'way', kind:'param', name:'Wayfarer', shape:'wayfarer', lens:52, height:40, bridge:18, temple:145, color:'#151515', mat:'acetato', tint:'clear'},
+  {id:'round', kind:'param', name:'Redondo', shape:'redondo', lens:48, height:45, bridge:21, temple:145, color:'#7a4a2a', mat:'acetato', tint:'clear'},
+  {id:'avi', kind:'param', name:'Aviador', shape:'aviador', lens:58, height:50, bridge:14, temple:140, color:'#c9a24a', mat:'metal', tint:'verde'},
+  {id:'cat', kind:'param', name:'Ojo de gato', shape:'gato', lens:53, height:40, bridge:17, temple:140, color:'#a3142a', mat:'acetato', tint:'clear'},
+  {id:'rect', kind:'param', name:'Rectangular', shape:'rectangular', lens:55, height:36, bridge:17, temple:145, color:'#1d3d6e', mat:'acetato', tint:'azul'},
 ];
 const SHAPES = {wayfarer:'Wayfarer', redondo:'Redondo', aviador:'Aviador', gato:'Ojo de gato', rectangular:'Rectangular'};
 const MATS = {acetato:'Acetato', metal:'Metal'};
 const TINTS = {clear:{c:'#ffffff',o:0.08,l:'Transparente'}, azul:{c:'#bfe3ff',o:0.18,l:'Filtro azul'}, gris:{c:'#262626',o:0.8,l:'Sol gris'}, verde:{c:'#2f4a2c',o:0.78,l:'Sol G-15'}, cafe:{c:'#5a3a1e',o:0.72,l:'Sol café'}};
 const COLORS = ['#151515','#7a4a2a','#c9a24a','#a3142a','#1d3d6e','#d8d2c4','#3e6b4f','#b8b8bc','#e88fa8'];
+const PH = {}; // resultados de procesar fotos, por id
 const S = {...CATALOG[0], up:0, depth:0};
 
-// ---------- Geometría paramétrica ----------
-// Contorno del lente derecho (+x = lado de la patilla), centrado en 0, en mm
+// ================= Geometría paramétrica =================
 function lensPts(p, grow = 0, N = 80){
   const w = p.lens/2 + grow, h = p.height/2 + grow, out = [];
   const n = {wayfarer:4.2, redondo:2.05, aviador:2.5, gato:3.6, rectangular:6}[p.shape] || 4;
@@ -117,6 +155,7 @@ function lensPts(p, grow = 0, N = 80){
 }
 const mmOf = p => p.mat === 'metal' ? {rim:1.6, depth:1.8, tube:1.0, end:3} : {rim:4.2, depth:5, tube:1.8, end:6};
 function frameWidth(p){
+  if (p.kind === 'photo'){ const R = PH[p.id]; return R ? R.bw/(R.lensPx/p.lens) : 0; }
   const {rim} = mmOf(p); const maxX = Math.max(...lensPts(p, rim).map(v => v.x));
   return 2*(p.bridge/2 + p.lens/2 + maxX) + 2;
 }
@@ -134,14 +173,24 @@ let glasses = null;
 const occluder = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 28), new THREE.MeshBasicMaterial({colorWrite:false}));
 occluder.renderOrder = -1; root.add(occluder);
 
-function disposeGroup(g){ g.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
+function disposeGroup(g){ g.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material){ if (o.material.map && o.material.map.userData.own) o.material.map.dispose(); o.material.dispose(); } }); }
 
-function buildGlasses(p){
-  if (glasses){ root.remove(glasses); disposeGroup(glasses); }
-  const g = new THREE.Group(), metal = p.mat === 'metal', M = mmOf(p);
-  const frameMat = new THREE.MeshPhysicalMaterial({color:p.color, metalness:metal?1:0, roughness:metal?0.22:0.3, clearcoat:metal?0:1, clearcoatRoughness:0.12});
+function addTemple(g, side, x, hy, z0, L, tube, mat){
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(x, hy, z0), new THREE.Vector3(x + side*2, hy, -45),
+    new THREE.Vector3(x + side*3, hy - 2, -(L - 35)), new THREE.Vector3(x + side*2.5, hy - 12, -(L - 10)),
+    new THREE.Vector3(x + side*1.5, hy - 24, -L)]);
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 48, tube, 8), mat));
+}
+function lensMaterial(p, alphaMap){
   const T = TINTS[p.tint];
-  const lensMat = new THREE.MeshPhysicalMaterial({color:T.c, transparent:true, opacity:T.o, roughness:0.05, depthWrite:false, side:THREE.DoubleSide});
+  return new THREE.MeshPhysicalMaterial({color:T.c, transparent:true, opacity:T.o, roughness:0.05, depthWrite:false, side:THREE.DoubleSide, alphaMap:alphaMap || null});
+}
+
+function buildParam(p, g){
+  const metal = p.mat === 'metal', M = mmOf(p);
+  const frameMat = new THREE.MeshPhysicalMaterial({color:p.color, metalness:metal?1:0, roughness:metal?0.22:0.3, clearcoat:metal?0:1, clearcoatRoughness:0.12});
+  const lensMat = lensMaterial(p);
   const cx = p.bridge/2 + p.lens/2, wrap = 0.06;
   const inner = lensPts(p, 0), outer = lensPts(p, M.rim);
   const maxX = Math.max(...outer.map(v => v.x)), hy = p.height*0.22;
@@ -157,12 +206,7 @@ function buildGlasses(p){
     lens.position.x = side*cx; lens.rotation.y = side*wrap; lens.renderOrder = 2; g.add(lens);
     const end = new THREE.Mesh(new THREE.BoxGeometry(M.end, M.end + 1, M.depth + 3), frameMat);
     end.position.set(side*(hx - M.end/2 + 1), hy, hz - 1); g.add(end);
-    const tx = side*(hx + 0.5), L = p.temple;
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(tx, hy, hz - 2), new THREE.Vector3(tx + side*2, hy, -45),
-      new THREE.Vector3(tx + side*3, hy - 2, -(L - 35)), new THREE.Vector3(tx + side*2.5, hy - 12, -(L - 10)),
-      new THREE.Vector3(tx + side*1.5, hy - 24, -L)]);
-    g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 48, M.tube, 8), frameMat));
+    addTemple(g, side, side*(hx + 0.5), hy, hz - 2, p.temple, M.tube, frameMat);
     if (metal){
       const pad = new THREE.Mesh(new THREE.SphereGeometry(3.2, 16, 12), new THREE.MeshPhysicalMaterial({color:'#ffffff', transparent:true, opacity:0.55, roughness:0.2}));
       pad.scale.set(0.6, 1, 0.4); pad.position.set(side*(p.bridge/2 + 2), -p.height*0.12, -7); g.add(pad);
@@ -176,12 +220,233 @@ function buildGlasses(p){
     const top = new THREE.CatmullRomCurve3([new THREE.Vector3(-tb, ty, 0), new THREE.Vector3(0, ty + 1, 1), new THREE.Vector3(tb, ty, 0)]);
     g.add(new THREE.Mesh(new THREE.TubeGeometry(top, 24, 0.9, 8), frameMat));
   }
+  return hx;
+}
+
+// Modelo desde foto: el frente es la foto recortada (textura + transparencia), apilada en capas para dar grosor
+function buildPhoto(p, g){
+  const R = PH[p.id]; if (!R) return 60;
+  const metal = p.mat === 'metal', pxmm = R.lensPx / p.lens;
+  const fw = R.bw/pxmm, fh = R.bh/pxmm;
+  const cx = (R.bx0 + R.bw/2 - R.ox)/pxmm, cy = -(R.by0 + R.bh/2 - R.oy)/pxmm;
+  const tex = new THREE.CanvasTexture(R.front); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; tex.userData.own = true;
+  const geo = new THREE.PlaneGeometry(fw, fh);
+  const layers = metal ? 3 : 8, depth = metal ? 1.5 : 4.5;
+  for (let i = 0; i < layers; i++){
+    const t = layers > 1 ? i/(layers - 1) : 0;
+    const m = new THREE.MeshPhysicalMaterial({map:tex, alphaTest:0.5, side:THREE.DoubleSide, roughness:metal?0.25:0.35, metalness:metal?0.5:0, clearcoat:(i === 0 && !metal)?1:0, clearcoatRoughness:0.12, color:new THREE.Color().setScalar(1 - 0.3*t)});
+    const pl = new THREE.Mesh(i ? geo.clone() : geo, m); pl.position.set(cx, cy, -depth*t); g.add(pl);
+  }
+  const ltex = new THREE.CanvasTexture(R.lens); ltex.userData.own = true;
+  const lens = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), lensMaterial(p, ltex));
+  lens.position.set(cx, cy, -depth*0.4); lens.renderOrder = 2; g.add(lens);
+  const tMat = new THREE.MeshPhysicalMaterial({color:R.templeColor, metalness:metal?1:0, roughness:metal?0.25:0.35, clearcoat:metal?0:1});
+  const xs = [[1, (R.bx0 + R.bw - R.ox)/pxmm, R.hyR], [-1, (R.bx0 - R.ox)/pxmm, R.hyL]];
+  for (const [side, x, hyPx] of xs){
+    const hy = -(hyPx - R.oy)/pxmm;
+    const end = new THREE.Mesh(new THREE.BoxGeometry(4, metal ? 3 : 6, depth + 2), tMat);
+    end.position.set(x - side*1.5, hy, -depth/2 - 1); g.add(end);
+    addTemple(g, side, x - side*0.5, hy, -depth - 1, p.temple, metal ? 1.0 : 1.8, tMat);
+  }
+  return Math.min(Math.abs(xs[0][1]), Math.abs(xs[1][1]));
+}
+
+function buildGlasses(p){
+  if (glasses){ root.remove(glasses); disposeGroup(glasses); }
+  const g = new THREE.Group();
+  const hx = p.kind === 'photo' ? buildPhoto(p, g) : buildParam(p, g);
   occluder.scale.set(hx - 4, 115, 92);
   occluder.position.set(0, 8, -12 - 92);
   root.add(glasses = g);
 }
 
-// ---------- UI ----------
+// ================= Procesamiento de la foto =================
+function morph(m, w, h, r, grow){
+  const t = new Uint8Array(m.length), o = new Uint8Array(m.length), hit = grow ? 1 : 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    let v = 1 - hit;
+    for (let k = -r; k <= r; k++){ const xx = Math.min(w - 1, Math.max(0, x + k)); if (m[y*w + xx] === hit){ v = hit; break; } }
+    t[y*w + x] = v;
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    let v = 1 - hit;
+    for (let k = -r; k <= r; k++){ const yy = Math.min(h - 1, Math.max(0, y + k)); if (t[yy*w + x] === hit){ v = hit; break; } }
+    o[y*w + x] = v;
+  }
+  return o;
+}
+// Etiqueta regiones conectadas donde mask[i]===val
+function label(mask, w, h, val){
+  const lab = new Int32Array(mask.length).fill(-1), comps = [], q = new Int32Array(mask.length);
+  for (let s = 0; s < mask.length; s++){
+    if (mask[s] !== val || lab[s] !== -1) continue;
+    const id = comps.length; let head = 0, tail = 0; q[tail++] = s; lab[s] = id;
+    const c = {id, area:0, x0:w, y0:h, x1:0, y1:0, sx:0, sy:0, edge:false};
+    while (head < tail){
+      const i = q[head++], x = i % w, y = (i - x)/w;
+      c.area++; c.sx += x; c.sy += y;
+      if (x < c.x0) c.x0 = x; if (x > c.x1) c.x1 = x; if (y < c.y0) c.y0 = y; if (y > c.y1) c.y1 = y;
+      if (x === 0 || y === 0 || x === w - 1 || y === h - 1) c.edge = true;
+      const nb = [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1];
+      for (const n of nb) if (n >= 0 && mask[n] === val && lab[n] === -1){ lab[n] = id; q[tail++] = n; }
+    }
+    comps.push(c);
+  }
+  return {lab, comps};
+}
+
+function processPhoto(img, thr){
+  const k = Math.min(1, 900/Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.max(1, Math.round(img.naturalWidth*k)), h = Math.max(1, Math.round(img.naturalHeight*k)), N = w*h;
+  const base = document.createElement('canvas'); base.width = w; base.height = h;
+  const bx = base.getContext('2d', {willReadFrequently:true}); bx.drawImage(img, 0, 0, w, h);
+  const d = bx.getImageData(0, 0, w, h).data;
+  // Color de fondo = mediana del borde
+  const rs = [], gs = [], bs = [], push = i => { rs.push(d[i*4]); gs.push(d[i*4 + 1]); bs.push(d[i*4 + 2]); };
+  for (let x = 0; x < w; x += 2){ push(x); push((h - 1)*w + x); }
+  for (let y = 0; y < h; y += 2){ push(y*w); push(y*w + w - 1); }
+  const med = a => a.sort((p, q) => p - q)[a.length >> 1];
+  const br = med(rs), bgc = med(gs), bb = med(bs);
+  let m = new Uint8Array(N);
+  for (let i = 0; i < N; i++){ const a = d[i*4] - br, b = d[i*4 + 1] - bgc, c = d[i*4 + 2] - bb; m[i] = Math.sqrt(a*a + b*b + c*c) > thr ? 1 : 0; }
+  m = morph(morph(m, w, h, 2, true), w, h, 2, false); // cierre: une bordes y tapa poros
+  // Quedarse con la pieza más grande (el marco)
+  const F = label(m, w, h, 1);
+  if (!F.comps.length) return {error:'No encontré el marco. Prueba subiendo la sensibilidad.'};
+  const main = F.comps.reduce((a, b) => a.area > b.area ? a : b);
+  const fg = new Uint8Array(N); for (let i = 0; i < N; i++) fg[i] = F.lab[i] === main.id ? 1 : 0;
+  // Huecos encerrados por el marco = lentes
+  const Hh = label(fg, w, h, 0);
+  const holes = Hh.comps.filter(c => !c.edge && c.area > N*0.004).sort((a, b) => b.area - a.area).slice(0, 2).sort((a, b) => a.x0 - b.x0);
+  if (holes.length < 2) return {error:'No encontré los dos lentes. Revisa que el fondo sea blanco, que el cristal sea claro y que las patillas no crucen los lentes.'};
+  const [L1, L2] = holes;
+  // Recorte con margen
+  const pad = 3, x0 = Math.max(0, main.x0 - pad), y0 = Math.max(0, main.y0 - pad), x1 = Math.min(w - 1, main.x1 + pad), y1 = Math.min(h - 1, main.y1 + pad);
+  const cw = x1 - x0 + 1, ch = y1 - y0 + 1;
+  const front = document.createElement('canvas'); front.width = cw; front.height = ch;
+  const fx = front.getContext('2d'); const fd = fx.createImageData(cw, ch);
+  const lensC = document.createElement('canvas'); lensC.width = cw; lensC.height = ch;
+  const lx = lensC.getContext('2d'); const ld = lx.createImageData(cw, ch);
+  const ov = bx.getImageData(0, 0, w, h);
+  let tr = 0, tg = 0, tb = 0, tn = 0;
+  const edgeBand = Math.max(3, Math.round(main.x1 - main.x0)*0.05);
+  let hyR = 0, nR = 0, hyL = 0, nL = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    const i = y*w + x, isF = fg[i] === 1, hl = Hh.lab[i], isL = hl === L1.id || hl === L2.id;
+    if (isF){ ov.data[i*4] = ov.data[i*4]*0.45 + 255*0.55; ov.data[i*4 + 1] *= 0.45; ov.data[i*4 + 2] *= 0.45; }
+    else if (isL){ ov.data[i*4] *= 0.5; ov.data[i*4 + 1] = ov.data[i*4 + 1]*0.5 + 132*0.5; ov.data[i*4 + 2] = ov.data[i*4 + 2]*0.5 + 255*0.5; }
+    if (isF && x >= main.x1 - edgeBand){ hyR += y; nR++; tr += d[i*4]; tg += d[i*4 + 1]; tb += d[i*4 + 2]; tn++; }
+    if (isF && x <= main.x0 + edgeBand){ hyL += y; nL++; tr += d[i*4]; tg += d[i*4 + 1]; tb += d[i*4 + 2]; tn++; }
+    if (x >= x0 && x <= x1 && y >= y0 && y <= y1){
+      const j = ((y - y0)*cw + (x - x0))*4;
+      fd.data[j] = d[i*4]; fd.data[j + 1] = d[i*4 + 1]; fd.data[j + 2] = d[i*4 + 2]; fd.data[j + 3] = isF ? 255 : 0;
+      const v = isL ? 255 : 0; ld.data[j] = ld.data[j + 1] = ld.data[j + 2] = v; ld.data[j + 3] = 255;
+    }
+  }
+  fx.putImageData(fd, 0, 0); lx.putImageData(ld, 0, 0); bx.putImageData(ov, 0, 0);
+  const hex = v => Math.round(v).toString(16).padStart(2, '0');
+  const thumb = document.createElement('canvas'); const tk = 160/cw; thumb.width = 160; thumb.height = Math.max(1, Math.round(ch*tk));
+  thumb.getContext('2d').drawImage(front, 0, 0, thumb.width, thumb.height);
+  const store = document.createElement('canvas'); store.width = w; store.height = h; store.getContext('2d').drawImage(img, 0, 0, w, h);
+  return {
+    overlay: base, front, lens: lensC, thumb: thumb.toDataURL('image/png'), src: store.toDataURL('image/jpeg', 0.88),
+    bx0: x0, by0: y0, bw: cw, bh: ch,
+    lensPx: ((L1.x1 - L1.x0 + 1) + (L2.x1 - L2.x0 + 1))/2,
+    lensHpx: ((L1.y1 - L1.y0 + 1) + (L2.y1 - L2.y0 + 1))/2,
+    bridgePx: L2.x0 - L1.x1 - 1,
+    ox: (L1.sx/L1.area + L2.sx/L2.area)/2, oy: (L1.sy/L1.area + L2.sy/L2.area)/2,
+    hyR: nR ? hyR/nR : main.y0, hyL: nL ? hyL/nL : main.y0,
+    templeColor: tn ? '#' + hex(tr/tn) + hex(tg/tn) + hex(tb/tn) : '#222222'
+  };
+}
+
+// Foto de ejemplo: marco de carey sobre fondo blanco (generada en el navegador)
+function samplePhoto(){
+  const c = document.createElement('canvas'); c.width = 1000; c.height = 440; const x = c.getContext('2d');
+  const gr = x.createLinearGradient(0, 0, 0, 440); gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#f2f2f2'); x.fillStyle = gr; x.fillRect(0, 0, 1000, 440);
+  const pc = document.createElement('canvas'); pc.width = pc.height = 140; const p = pc.getContext('2d');
+  p.fillStyle = '#5b3416'; p.fillRect(0, 0, 140, 140);
+  const cols = ['#2a1405', '#8a5a2b', '#c08a4a', '#1a0c03', '#a66a2e'];
+  for (let i = 0; i < 70; i++){
+    const px = Math.random()*140, py = Math.random()*140, r = 6 + Math.random()*22;
+    const rg = p.createRadialGradient(px, py, 0, px, py, r); rg.addColorStop(0, cols[i % 5]); rg.addColorStop(1, 'rgba(0,0,0,0)');
+    p.fillStyle = rg; p.globalAlpha = 0.7; p.beginPath(); p.ellipse(px, py, r*1.6, r, Math.random()*3, 0, 7); p.fill();
+  }
+  const pat = x.createPattern(pc, 'repeat'), k = 6.2, lw = 52*k, lh = 41*k, br = 18*k, rim = 4.5*k, cy = 215;
+  x.shadowColor = 'rgba(0,0,0,0.07)'; x.shadowBlur = 24; x.shadowOffsetY = 10;
+  for (const s of [-1, 1]){
+    const cx = 500 + s*(br/2 + lw/2);
+    x.beginPath(); x.roundRect(cx - lw/2 - rim/2, cy - lh/2 - rim/2, lw + rim, lh + rim, [70, 70, 110, 110]);
+    x.strokeStyle = pat; x.lineWidth = rim; x.stroke();
+    x.save(); x.shadowColor = 'transparent'; x.fillStyle = 'rgba(205,222,232,0.16)'; x.beginPath(); x.roundRect(cx - lw/2, cy - lh/2, lw, lh, [66, 66, 106, 106]); x.fill(); x.restore();
+    x.fillStyle = pat; x.fillRect(s > 0 ? cx + lw/2 + rim - 4 : cx - lw/2 - rim - 26, cy - lh/2 + 8, 30, 36);
+  }
+  x.beginPath(); x.moveTo(500 - br/2 - 6, cy - lh*0.25); x.quadraticCurveTo(500, cy - lh*0.42, 500 + br/2 + 6, cy - lh*0.25);
+  x.strokeStyle = pat; x.lineWidth = rim*1.1; x.stroke();
+  return c.toDataURL('image/jpeg', 0.92);
+}
+
+// ================= Editor de foto =================
+let edImg = null, edR = null;
+const loadImg = src => new Promise((ok, ko) => { const im = new Image(); im.onload = () => ok(im); im.onerror = ko; im.src = src; });
+function showDetection(){
+  const det = $('det');
+  if (!edR || edR.error){ det.innerHTML = `<span class="bad">${esc(edR ? edR.error : 'Sin imagen')}</span>`; $('add').disabled = true; }
+  else {
+    const lens = +$('m-lens').value || 52, bridge = +$('m-bridge').value || 18, pxmm = edR.lensPx/lens;
+    const bm = edR.bridgePx/pxmm, ok = Math.abs(bm - bridge) <= 3;
+    det.innerHTML = `<span class="ok">Marco y 2 lentes detectados.</span> Alto lente ${(edR.lensHpx/pxmm).toFixed(1)} mm · ancho total ${(edR.bw/pxmm).toFixed(0)} mm · puente medido <span class="${ok ? 'ok' : 'bad'}">${bm.toFixed(1)} mm</span> (declarado ${bridge} mm)${ok ? '' : '. Revisa las medidas o la foto.'}`;
+    $('add').disabled = false;
+  }
+  const ov = $('ov');
+  if (edR && edR.overlay){ ov.width = edR.overlay.width; ov.height = edR.overlay.height; ov.getContext('2d').drawImage(edR.overlay, 0, 0); }
+}
+function runDetection(){
+  if (!edImg) return;
+  edR = processPhoto(edImg, +$('thr').value);
+  if (edR.error){ const tmp = document.createElement('canvas'); tmp.width = edImg.naturalWidth; tmp.height = edImg.naturalHeight; const k = Math.min(1, 900/Math.max(tmp.width, tmp.height)); tmp.width *= k; tmp.height *= k; tmp.getContext('2d').drawImage(edImg, 0, 0, tmp.width, tmp.height); edR.overlay = tmp; }
+  showDetection();
+}
+async function openEditor(src, preset){
+  try { edImg = await loadImg(src); } catch { say('No pude leer la imagen.'); return; }
+  if (preset){ $('m-lens').value = preset.lens; $('m-bridge').value = preset.bridge; $('m-temple').value = preset.temple; $('m-name').value = preset.name; }
+  $('ed').hidden = false; runDetection(); $('ed').scrollIntoView({behavior:'smooth', block:'start'});
+}
+$('file').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader(); rd.onload = () => openEditor(rd.result, {lens:52, bridge:18, temple:145, name:f.name.replace(/\.[^.]+$/, '').slice(0, 24) || 'Mi marco'}); rd.readAsDataURL(f);
+  e.target.value = '';
+};
+$('sample').onclick = () => openEditor(samplePhoto(), {lens:52, bridge:18, temple:145, name:'Carey ejemplo'});
+let thrRaf = 0;
+$('thr').oninput = e => { $('o-thr').textContent = e.target.value; cancelAnimationFrame(thrRaf); thrRaf = requestAnimationFrame(runDetection); };
+for (const id of ['m-lens', 'm-bridge']) $(id).oninput = showDetection;
+$('cancel').onclick = () => { $('ed').hidden = true; edImg = edR = null; };
+$('add').onclick = () => {
+  if (!edR || edR.error) return;
+  const item = {id:'f' + Date.now(), kind:'photo', name:$('m-name').value.trim() || 'Mi marco', lens:+$('m-lens').value || 52, bridge:+$('m-bridge').value || 18, temple:Math.min(150, Math.max(130, +$('m-temple').value || 145)), mat:S.mat, tint:'clear', thr:+$('thr').value, src:edR.src, thumb:edR.thumb, height:40, shape:'wayfarer', color:edR.templeColor};
+  PH[item.id] = edR; CATALOG.push(item); Object.assign(S, item); saveCustom(); refresh();
+  $('ed').hidden = true; edImg = edR = null;
+  say(`“${item.name}” agregado al catálogo. Pruébatelo con la cámara.`);
+  stage.scrollIntoView({behavior:'smooth', block:'start'});
+};
+$('del').onclick = () => {
+  const i = CATALOG.findIndex(p => p.id === S.id); if (i < 0 || CATALOG[i].kind !== 'photo') return;
+  delete PH[S.id]; CATALOG.splice(i, 1); saveCustom(); Object.assign(S, CATALOG[0]); refresh();
+};
+function saveCustom(){
+  try { localStorage.setItem('lentes.custom', JSON.stringify(CATALOG.filter(p => p.kind === 'photo').map(({id, kind, name, lens, bridge, temple, mat, tint, thr, src, thumb, height, shape, color}) => ({id, kind, name, lens, bridge, temple, mat, tint, thr, src, thumb, height, shape, color})))); }
+  catch { say('No se pudo guardar en este navegador (espacio lleno); el modelo queda solo en esta sesión.'); }
+}
+async function loadCustom(){
+  let list = []; try { list = JSON.parse(localStorage.getItem('lentes.custom') || '[]'); } catch {}
+  for (const it of list){
+    try { const im = await loadImg(it.src); const R = processPhoto(im, it.thr); if (!R.error){ PH[it.id] = R; CATALOG.push(it); } } catch {}
+  }
+  if (list.length) refresh();
+}
+
+// ================= UI general =================
 function svgPreview(p){
   const pts = lensPts(p, 0, 40), cx = p.bridge/2 + p.lens/2, k = 0.62;
   const path = s => 'M' + pts.map(v => `${(80 + s*(cx + v.x)*k).toFixed(1)},${(22 - v.y*k).toFixed(1)}`).join('L') + 'Z';
@@ -202,15 +467,17 @@ for (const k of Object.keys(units)) $(k).oninput = e => { S[k] = +e.target.value
 function refresh(fitOnly = false){
   for (const k of Object.keys(units)){ $(k).value = S[k]; $('o-' + k).textContent = S[k] + units[k]; }
   if (fitOnly) return;
-  $('catalog').innerHTML = CATALOG.map((p, i) => `<button data-i="${i}" aria-pressed="${p.name === S.name && p.shape === S.shape && p.color === S.color && p.lens === S.lens}">${svgPreview(p)}${p.name}<small>${code(p)}</small></button>`).join('');
+  $('catalog').innerHTML = CATALOG.map((p, i) => `<button data-i="${i}" aria-pressed="${p.id === S.id}">${p.kind === 'photo' ? `<img src="${p.thumb}" alt="">` : svgPreview(p)}${esc(p.name)}<small>${code(p)}</small></button>`).join('');
   for (const [id, key] of [['shape','shape'], ['mat','mat'], ['tint','tint']])
     $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === S[key]));
   $('colors').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.c === S.color));
+  const photo = S.kind === 'photo';
+  $('param').hidden = photo; $('photoNote').hidden = !photo;
   $('code').textContent = code(S);
   buildGlasses(S);
 }
 
-// ---------- Escena ----------
+// ================= Escena =================
 let W = 1, H = 1;
 function resize(){
   W = stage.clientWidth; H = stage.clientHeight;
@@ -219,7 +486,7 @@ function resize(){
 }
 const ro = new ResizeObserver(resize); ro.observe(stage);
 
-// ---------- Seguimiento facial ----------
+// ================= Seguimiento facial =================
 let landmarker = null, stream = null, lastT = -1, camOn = false;
 let eyeMm = null, faceMm = null, sPos = null, sQuat = null;
 const MP = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
@@ -256,7 +523,7 @@ $('snap').onclick = () => {
   const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height;
   const x = c.getContext('2d'); x.translate(c.width, 0); x.scale(-1, 1);
   x.drawImage(video, 0, 0, c.width, c.height); x.drawImage(canvas, 0, 0, c.width, c.height);
-  const a = document.createElement('a'); a.href = c.toDataURL('image/jpeg', 0.92); a.download = `lentes-${S.shape}-${code(S).replace('□','x')}.jpg`; a.click();
+  const a = document.createElement('a'); a.href = c.toDataURL('image/jpeg', 0.92); a.download = `lentes-${code(S).replace('□','x')}.jpg`; a.click();
 };
 
 const V = new THREE.Vector3(), ONE = new THREE.Vector3();
@@ -267,25 +534,19 @@ function track(f){
   const zA = new THREE.Vector3().crossVectors(xA, yA).normalize();
   yA = new THREE.Vector3().crossVectors(zA, xA).normalize();
   const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(xA, yA, zA));
-
-  // Escala real: el iris humano mide ~11,7 mm. Se calibra una constante por persona (distancia entre comisuras)
   const iris = (P(469).distanceTo(P(471)) + P(474).distanceTo(P(476))) / 2;
   const eyePx = P(33).distanceTo(P(263)), facePx = P(234).distanceTo(P(454));
   const pxmmIris = iris / 11.7;
-  const a = eyeMm ? 0.04 : 1;
-  eyeMm = eyeMm ? eyeMm + (eyePx/pxmmIris - eyeMm)*a : eyePx/pxmmIris;
+  eyeMm = eyeMm ? eyeMm + (eyePx/pxmmIris - eyeMm)*0.04 : eyePx/pxmmIris;
   const pxmm = eyePx / eyeMm;
   faceMm = faceMm ? faceMm + (facePx/pxmm - faceMm)*0.05 : facePx/pxmm;
-
   const p168 = P(168), mid = P(468).add(P(473)).multiplyScalar(0.5);
   const dy = V.copy(mid).sub(p168).dot(yA);
   const pos = p168.clone().addScaledVector(yA, dy + S.up*pxmm).addScaledVector(zA, (5 + S.depth)*pxmm);
-
   if (!sPos){ sPos = pos.clone(); sQuat = q.clone(); }
   sPos.lerp(pos, 0.55); sQuat.slerp(q, 0.55);
   root.matrix.compose(sPos, sQuat, ONE.set(pxmm, pxmm, pxmm));
   root.visible = true; occluder.visible = true;
-
   const fw = frameWidth(S), d = fw - faceMm;
   const verdict = Math.abs(d) <= 8 ? 'Buen calce' : d > 8 ? 'Marco grande para tu rostro' : 'Marco chico para tu rostro';
   fitEl.innerHTML = `<b>${verdict}</b><br>Marco ${fw.toFixed(0)} mm · Rostro ~${faceMm.toFixed(0)} mm`;
@@ -310,7 +571,7 @@ function loop(t){
   }
   renderer.render(scene, cam);
 }
-refresh(); resize(); requestAnimationFrame(loop);
+refresh(); resize(); requestAnimationFrame(loop); loadCustom();
 }
 </script>
 </body>
