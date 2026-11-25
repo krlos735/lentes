@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Probador de lentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light dark;--bg:light-dark(#f4f3f0,#121316);--card:light-dark(#fff,#1c1d22);--ink:light-dark(#141414,#f1f1f1);--mute:light-dark(#6b6b6b,#9a9aa2);--line:light-dark(#e2e0db,#2c2d33);--acc:#0a5cff}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system-ui,sans-serif}
+header{padding:16px max(4vw,14px) 6px}
+h1{font-size:26px;line-height:1.1;margin:0;font-weight:800}
+#status{margin:4px 0 0;color:var(--mute);font-size:14px}
+.wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;padding:10px max(4vw,14px) 28px;max-width:1240px;margin:auto}
+@media(max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}}
+.stage{--ar:1.333;position:relative;width:min(100%,calc(72vh * var(--ar)));aspect-ratio:var(--ar);margin:auto;background:#0d0d0f;border-radius:18px;overflow:hidden}
+.mirror{position:absolute;inset:0;transform:scaleX(-1)}
+.mirror video,.mirror canvas{position:absolute;inset:0;width:100%;height:100%}
+video{object-fit:fill}
+.ph{position:absolute;left:0;right:0;bottom:0;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;text-align:center;font-size:14px}
+.fit{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.62);color:#fff;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.35}
+.fit b{font-size:15px}
+.row{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+button{font:inherit;font-weight:600;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+h2{font-size:15px;margin:14px 0 8px}h2:first-child{margin-top:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.cards button{height:auto;padding:8px 6px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px}
+.cards button[aria-pressed=true],.seg button[aria-pressed=true]{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+.cards svg{width:100%;height:30px}
+.cards small{color:var(--mute);font-weight:400;white-space:nowrap}
+.seg{display:flex;flex-wrap:wrap;gap:6px}.seg button{min-height:38px;padding:0 12px;font-size:14px}
+label.r{display:grid;grid-template-columns:7.5em minmax(0,1fr) 4em;align-items:center;gap:8px;font-size:14px;margin:6px 0}
+label.r output{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--acc);height:28px}
+.sw{display:flex;gap:8px;flex-wrap:wrap}.sw button{width:36px;height:36px;min-height:36px;padding:0;border-radius:50%}
+.sw button[aria-pressed=true]{outline:3px solid var(--acc);outline-offset:2px}
+.code{font-size:22px;font-weight:800;margin:10px 0 0;letter-spacing:.02em}
+.note{color:var(--mute);font-size:13px;margin:6px 0 0}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<header><h1>Probador de lentes</h1><p id="status">Cargando detector facial…</p></header>
+<main class="wrap">
+  <section>
+    <div id="stage" class="stage">
+      <div class="mirror"><video id="video" playsinline muted></video><canvas id="gl"></canvas></div>
+      <div class="fit" id="fit" hidden></div>
+      <div class="ph" id="ph"><span>Mira de frente a la cámara, con buena luz.</span><button class="pri" id="start">Iniciar cámara</button></div>
+    </div>
+    <div class="row"><button id="snap" disabled>Capturar foto</button><button id="stop" disabled>Detener cámara</button></div>
+  </section>
+  <aside class="panel">
+    <h2>Catálogo</h2><div id="catalog" class="cards"></div>
+    <h2>Modelador</h2>
+    <div class="seg" id="shape"></div>
+    <label class="r">Ancho lente<input type="range" id="lens" min="44" max="62" step="1"><output id="o-lens"></output></label>
+    <label class="r">Alto lente<input type="range" id="height" min="28" max="56" step="1"><output id="o-height"></output></label>
+    <label class="r">Puente<input type="range" id="bridge" min="12" max="24" step="1"><output id="o-bridge"></output></label>
+    <label class="r">Patilla<input type="range" id="temple" min="130" max="150" step="5"><output id="o-temple"></output></label>
+    <h2>Material y color</h2>
+    <div class="seg" id="mat"></div>
+    <div class="sw" id="colors" style="margin-top:10px"></div>
+    <h2>Cristal</h2><div class="seg" id="tint"></div>
+    <h2>Ajuste en el rostro</h2>
+    <label class="r">Altura<input type="range" id="up" min="-8" max="8" step="0.5"><output id="o-up"></output></label>
+    <label class="r">Profundidad<input type="range" id="depth" min="-6" max="10" step="0.5"><output id="o-depth"></output></label>
+    <p class="code" id="code"></p>
+    <p class="note">Medida estándar: ancho de lente □ puente – patilla, en mm. La escala real se estima con el diámetro del iris (~11,7 mm).</p>
+  </aside>
+</main>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { FaceLandmarker, FilesetResolver } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs';
+{
+const $ = id => document.getElementById(id);
+const video = $('video'), canvas = $('gl'), stage = $('stage'), statusEl = $('status'), fitEl = $('fit');
+const say = t => statusEl.textContent = t;
+
+const CATALOG = [
+  {name:'Wayfarer', shape:'wayfarer', lens:52, height:40, bridge:18, temple:145, color:'#151515', mat:'acetato', tint:'clear'},
+  {name:'Redondo', shape:'redondo', lens:48, height:45, bridge:21, temple:145, color:'#7a4a2a', mat:'acetato', tint:'clear'},
+  {name:'Aviador', shape:'aviador', lens:58, height:50, bridge:14, temple:140, color:'#c9a24a', mat:'metal', tint:'verde'},
+  {name:'Ojo de gato', shape:'gato', lens:53, height:40, bridge:17, temple:140, color:'#a3142a', mat:'acetato', tint:'clear'},
+  {name:'Rectangular', shape:'rectangular', lens:55, height:36, bridge:17, temple:145, color:'#1d3d6e', mat:'acetato', tint:'azul'},
+];
+const SHAPES = {wayfarer:'Wayfarer', redondo:'Redondo', aviador:'Aviador', gato:'Ojo de gato', rectangular:'Rectangular'};
+const MATS = {acetato:'Acetato', metal:'Metal'};
+const TINTS = {clear:{c:'#ffffff',o:0.08,l:'Transparente'}, azul:{c:'#bfe3ff',o:0.18,l:'Filtro azul'}, gris:{c:'#262626',o:0.8,l:'Sol gris'}, verde:{c:'#2f4a2c',o:0.78,l:'Sol G-15'}, cafe:{c:'#5a3a1e',o:0.72,l:'Sol café'}};
+const COLORS = ['#151515','#7a4a2a','#c9a24a','#a3142a','#1d3d6e','#d8d2c4','#3e6b4f','#b8b8bc','#e88fa8'];
+const S = {...CATALOG[0], up:0, depth:0};
+
+// ---------- Geometría paramétrica ----------
+// Contorno del lente derecho (+x = lado de la patilla), centrado en 0, en mm
+function lensPts(p, grow = 0, N = 80){
+  const w = p.lens/2 + grow, h = p.height/2 + grow, out = [];
+  const n = {wayfarer:4.2, redondo:2.05, aviador:2.5, gato:3.6, rectangular:6}[p.shape] || 4;
+  for (let i = 0; i < N; i++){
+    const t = i/N*Math.PI*2, c = Math.cos(t), s = Math.sin(t);
+    let x = w*Math.sign(c)*Math.abs(c)**(2/n), y = h*Math.sign(s)*Math.abs(s)**(2/n);
+    const u = x/w, v = y/h;
+    if (p.shape === 'wayfarer') x *= 1 + 0.1*v;
+    if (p.shape === 'aviador' && v < 0) y -= 0.22*h*(-v)*((1 - u)/2);
+    if (p.shape === 'aviador' && v > 0) y *= 0.9;
+    if (p.shape === 'gato'){ if (v > 0 && u > 0) y += 0.3*h*u*v; if (v < 0) x *= 1 - 0.12*(-v); }
+    out.push(new THREE.Vector2(x, y));
+  }
+  return out;
+}
+const mmOf = p => p.mat === 'metal' ? {rim:1.6, depth:1.8, tube:1.0, end:3} : {rim:4.2, depth:5, tube:1.8, end:6};
+function frameWidth(p){
+  const {rim} = mmOf(p); const maxX = Math.max(...lensPts(p, rim).map(v => v.x));
+  return 2*(p.bridge/2 + p.lens/2 + maxX) + 2;
+}
+
+const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true, preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.5));
+const dl = new THREE.DirectionalLight(0xffffff, 1.4); dl.position.set(300, 1000, 1000); scene.add(dl);
+const cam = new THREE.OrthographicCamera(0, 1, 0, -1, -10000, 10000);
+const root = new THREE.Group(); root.matrixAutoUpdate = false; scene.add(root);
+let glasses = null;
+const occluder = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 28), new THREE.MeshBasicMaterial({colorWrite:false}));
+occluder.renderOrder = -1; root.add(occluder);
+
+function disposeGroup(g){ g.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
+
+function buildGlasses(p){
+  if (glasses){ root.remove(glasses); disposeGroup(glasses); }
+  const g = new THREE.Group(), metal = p.mat === 'metal', M = mmOf(p);
+  const frameMat = new THREE.MeshPhysicalMaterial({color:p.color, metalness:metal?1:0, roughness:metal?0.22:0.3, clearcoat:metal?0:1, clearcoatRoughness:0.12});
+  const T = TINTS[p.tint];
+  const lensMat = new THREE.MeshPhysicalMaterial({color:T.c, transparent:true, opacity:T.o, roughness:0.05, depthWrite:false, side:THREE.DoubleSide});
+  const cx = p.bridge/2 + p.lens/2, wrap = 0.06;
+  const inner = lensPts(p, 0), outer = lensPts(p, M.rim);
+  const maxX = Math.max(...outer.map(v => v.x)), hy = p.height*0.22;
+  const hx = cx + maxX, hz = -maxX*Math.sin(wrap) - 1;
+  for (const side of [1, -1]){
+    const sh = new THREE.Shape(outer.map(v => new THREE.Vector2(v.x*side, v.y)));
+    sh.holes.push(new THREE.Path(inner.map(v => new THREE.Vector2(v.x*side, v.y))));
+    const geo = new THREE.ExtrudeGeometry(sh, {depth:M.depth, bevelEnabled:true, bevelThickness:metal?0.3:0.8, bevelSize:metal?0.3:0.8, bevelSegments:2, curveSegments:4});
+    geo.translate(0, 0, -M.depth/2);
+    const rimMesh = new THREE.Mesh(geo, frameMat);
+    rimMesh.position.x = side*cx; rimMesh.rotation.y = side*wrap; g.add(rimMesh);
+    const lens = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(inner.map(v => new THREE.Vector2(v.x*side, v.y)))), lensMat);
+    lens.position.x = side*cx; lens.rotation.y = side*wrap; lens.renderOrder = 2; g.add(lens);
+    const end = new THREE.Mesh(new THREE.BoxGeometry(M.end, M.end + 1, M.depth + 3), frameMat);
+    end.position.set(side*(hx - M.end/2 + 1), hy, hz - 1); g.add(end);
+    const tx = side*(hx + 0.5), L = p.temple;
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(tx, hy, hz - 2), new THREE.Vector3(tx + side*2, hy, -45),
+      new THREE.Vector3(tx + side*3, hy - 2, -(L - 35)), new THREE.Vector3(tx + side*2.5, hy - 12, -(L - 10)),
+      new THREE.Vector3(tx + side*1.5, hy - 24, -L)]);
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 48, M.tube, 8), frameMat));
+    if (metal){
+      const pad = new THREE.Mesh(new THREE.SphereGeometry(3.2, 16, 12), new THREE.MeshPhysicalMaterial({color:'#ffffff', transparent:true, opacity:0.55, roughness:0.2}));
+      pad.scale.set(0.6, 1, 0.4); pad.position.set(side*(p.bridge/2 + 2), -p.height*0.12, -7); g.add(pad);
+    }
+  }
+  const hb = p.height*(p.shape === 'aviador' ? 0.12 : 0.18), bx = p.bridge/2 + M.rim*0.5;
+  const bridge = new THREE.CatmullRomCurve3([new THREE.Vector3(-bx, hb, 0), new THREE.Vector3(0, hb + (metal?2:3), 1), new THREE.Vector3(bx, hb, 0)]);
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(bridge, 24, metal ? 1.0 : 2.6, 8), frameMat));
+  if (p.shape === 'aviador'){
+    const ty = Math.max(...outer.map(v => v.y)) - 1.5, tb = cx - p.lens*0.2;
+    const top = new THREE.CatmullRomCurve3([new THREE.Vector3(-tb, ty, 0), new THREE.Vector3(0, ty + 1, 1), new THREE.Vector3(tb, ty, 0)]);
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(top, 24, 0.9, 8), frameMat));
+  }
+  occluder.scale.set(hx - 4, 115, 92);
+  occluder.position.set(0, 8, -12 - 92);
+  root.add(glasses = g);
+}
+
+// ---------- UI ----------
+function svgPreview(p){
+  const pts = lensPts(p, 0, 40), cx = p.bridge/2 + p.lens/2, k = 0.62;
+  const path = s => 'M' + pts.map(v => `${(80 + s*(cx + v.x)*k).toFixed(1)},${(22 - v.y*k).toFixed(1)}`).join('L') + 'Z';
+  return `<svg viewBox="0 0 160 44" aria-hidden="true"><path d="${path(1)} ${path(-1)}" fill="none" stroke="${p.color}" stroke-width="${p.mat==='metal'?1.5:4}"/></svg>`;
+}
+const code = p => `${p.lens}□${p.bridge}-${p.temple}`;
+function seg(id, opts, key){
+  $(id).innerHTML = Object.entries(opts).map(([k, v]) => `<button data-k="${k}">${typeof v === 'string' ? v : v.l}</button>`).join('');
+  $(id).onclick = e => { const b = e.target.closest('button'); if (b){ S[key] = b.dataset.k; refresh(); } };
+}
+seg('shape', SHAPES, 'shape'); seg('mat', MATS, 'mat'); seg('tint', TINTS, 'tint');
+$('colors').innerHTML = COLORS.map(c => `<button data-c="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('');
+$('colors').onclick = e => { const b = e.target.closest('button'); if (b){ S.color = b.dataset.c; refresh(); } };
+$('catalog').onclick = e => { const b = e.target.closest('button'); if (b){ Object.assign(S, CATALOG[+b.dataset.i]); refresh(); } };
+const units = {lens:' mm', height:' mm', bridge:' mm', temple:' mm', up:' mm', depth:' mm'};
+for (const k of Object.keys(units)) $(k).oninput = e => { S[k] = +e.target.value; refresh(k === 'up' || k === 'depth'); };
+
+function refresh(fitOnly = false){
+  for (const k of Object.keys(units)){ $(k).value = S[k]; $('o-' + k).textContent = S[k] + units[k]; }
+  if (fitOnly) return;
+  $('catalog').innerHTML = CATALOG.map((p, i) => `<button data-i="${i}" aria-pressed="${p.name === S.name && p.shape === S.shape && p.color === S.color && p.lens === S.lens}">${svgPreview(p)}${p.name}<small>${code(p)}</small></button>`).join('');
+  for (const [id, key] of [['shape','shape'], ['mat','mat'], ['tint','tint']])
+    $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === S[key]));
+  $('colors').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.c === S.color));
+  $('code').textContent = code(S);
+  buildGlasses(S);
+}
+
+// ---------- Escena ----------
+let W = 1, H = 1;
+function resize(){
+  W = stage.clientWidth; H = stage.clientHeight;
+  renderer.setSize(W, H, false);
+  cam.right = W; cam.bottom = -H; cam.updateProjectionMatrix();
+}
+const ro = new ResizeObserver(resize); ro.observe(stage);
+
+// ---------- Seguimiento facial ----------
+let landmarker = null, stream = null, lastT = -1, camOn = false;
+let eyeMm = null, faceMm = null, sPos = null, sQuat = null;
+const MP = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
+const MODEL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+(async () => {
+  try {
+    const fs = await FilesetResolver.forVisionTasks(MP);
+    const opts = d => ({baseOptions:{modelAssetPath:MODEL, delegate:d}, runningMode:'VIDEO', numFaces:1});
+    try { landmarker = await FaceLandmarker.createFromOptions(fs, opts('GPU')); }
+    catch { landmarker = await FaceLandmarker.createFromOptions(fs, opts('CPU')); }
+    say('Listo. Elige un modelo y toca “Iniciar cámara”.');
+  } catch (e){ say('No se pudo cargar el detector facial: ' + e.message); }
+})();
+
+$('start').onclick = async () => {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user', width:{ideal:1280}, height:{ideal:720}}, audio:false});
+    video.srcObject = stream; await video.play();
+    stage.style.setProperty('--ar', (video.videoWidth / video.videoHeight).toFixed(4));
+    camOn = true; eyeMm = faceMm = sPos = sQuat = null;
+    $('ph').hidden = true; $('snap').disabled = $('stop').disabled = false;
+    say(landmarker ? 'Buscando tu rostro…' : 'Cámara lista, esperando el detector…');
+    requestAnimationFrame(resize);
+  } catch (e){
+    say('No se pudo abrir la cámara. Revisa los permisos y que la página esté en HTTPS. (' + e.name + ')');
+  }
+};
+$('stop').onclick = () => {
+  stream?.getTracks().forEach(t => t.stop()); video.srcObject = null; camOn = false;
+  $('ph').hidden = false; fitEl.hidden = true; $('snap').disabled = $('stop').disabled = true;
+  say('Cámara detenida.');
+};
+$('snap').onclick = () => {
+  const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height;
+  const x = c.getContext('2d'); x.translate(c.width, 0); x.scale(-1, 1);
+  x.drawImage(video, 0, 0, c.width, c.height); x.drawImage(canvas, 0, 0, c.width, c.height);
+  const a = document.createElement('a'); a.href = c.toDataURL('image/jpeg', 0.92); a.download = `lentes-${S.shape}-${code(S).replace('□','x')}.jpg`; a.click();
+};
+
+const V = new THREE.Vector3(), ONE = new THREE.Vector3();
+function track(f){
+  const P = i => new THREE.Vector3(f[i].x*W, -f[i].y*H, -f[i].z*W);
+  const xA = P(263).sub(P(33)).normalize();
+  let yA = P(10).sub(P(152));
+  const zA = new THREE.Vector3().crossVectors(xA, yA).normalize();
+  yA = new THREE.Vector3().crossVectors(zA, xA).normalize();
+  const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(xA, yA, zA));
+
+  // Escala real: el iris humano mide ~11,7 mm. Se calibra una constante por persona (distancia entre comisuras)
+  const iris = (P(469).distanceTo(P(471)) + P(474).distanceTo(P(476))) / 2;
+  const eyePx = P(33).distanceTo(P(263)), facePx = P(234).distanceTo(P(454));
+  const pxmmIris = iris / 11.7;
+  const a = eyeMm ? 0.04 : 1;
+  eyeMm = eyeMm ? eyeMm + (eyePx/pxmmIris - eyeMm)*a : eyePx/pxmmIris;
+  const pxmm = eyePx / eyeMm;
+  faceMm = faceMm ? faceMm + (facePx/pxmm - faceMm)*0.05 : facePx/pxmm;
+
+  const p168 = P(168), mid = P(468).add(P(473)).multiplyScalar(0.5);
+  const dy = V.copy(mid).sub(p168).dot(yA);
+  const pos = p168.clone().addScaledVector(yA, dy + S.up*pxmm).addScaledVector(zA, (5 + S.depth)*pxmm);
+
+  if (!sPos){ sPos = pos.clone(); sQuat = q.clone(); }
+  sPos.lerp(pos, 0.55); sQuat.slerp(q, 0.55);
+  root.matrix.compose(sPos, sQuat, ONE.set(pxmm, pxmm, pxmm));
+  root.visible = true; occluder.visible = true;
+
+  const fw = frameWidth(S), d = fw - faceMm;
+  const verdict = Math.abs(d) <= 8 ? 'Buen calce' : d > 8 ? 'Marco grande para tu rostro' : 'Marco chico para tu rostro';
+  fitEl.innerHTML = `<b>${verdict}</b><br>Marco ${fw.toFixed(0)} mm · Rostro ~${faceMm.toFixed(0)} mm`;
+  fitEl.hidden = false;
+}
+
+const spinQ = new THREE.Quaternion(), spinE = new THREE.Euler();
+function loop(t){
+  requestAnimationFrame(loop);
+  if (camOn && landmarker && video.readyState >= 2 && video.currentTime !== lastT){
+    lastT = video.currentTime;
+    const r = landmarker.detectForVideo(video, performance.now());
+    const f = r.faceLandmarks && r.faceLandmarks[0];
+    if (f){ track(f); if (statusEl.textContent.startsWith('Buscando') || statusEl.textContent.startsWith('Cámara lista')) say('Mueve la cabeza para ver el modelo desde distintos ángulos.'); }
+    else { root.visible = false; fitEl.hidden = true; }
+  }
+  if (!camOn){
+    const s = W / 190;
+    spinE.set(0.18, Math.sin(t/1400)*0.7, 0); spinQ.setFromEuler(spinE);
+    root.matrix.compose(V.set(W/2, -H/2, 0), spinQ, ONE.set(s, s, s));
+    root.visible = true; occluder.visible = false;
+  }
+  renderer.render(scene, cam);
+}
+refresh(); resize(); requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
